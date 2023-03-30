@@ -1,13 +1,11 @@
 from django.contrib.auth.mixins import LoginRequiredMixin
-from django.contrib.humanize.templatetags.humanize import naturaltime
 from django.db.models import Q
-from django.http import HttpResponse
 from django.shortcuts import get_object_or_404, redirect, render
 from django.urls import reverse, reverse_lazy
 from django.views import View
 
-from ads.forms import CommentForm, CreateForm
-from ads.models import Ad, Comment, Fav
+from ads.forms import  CreateForm
+from ads.models import Ad
 from ads.owner import (OwnerCreateView, OwnerDeleteView, OwnerDetailView,
                        OwnerListView, OwnerUpdateView)
 
@@ -25,17 +23,7 @@ class AdListView(OwnerListView):
         else :
             ad_list = Ad.objects.all().order_by('-updated_at')[:10]
 
-        # Augment the ad_list
-        for obj in ad_list:
-            obj.natural_updated = naturaltime(obj.updated_at)
-
-        favorites = list()
-        if request.user.is_authenticated:
-            # rows = [{'id': 2}, {'id': 4} ... ]  (A list of rows)
-            rows = request.user.favorite_ads.values('id')
-            # favorites = [2, 4, ...] using list comprehension
-            favorites = [ row['id'] for row in rows ]
-        ctx = {'ad_list' : ad_list, 'favorites': favorites, 'search': strval}
+        ctx = {'ad_list' : ad_list}
 
         return render(request, self.template_name, ctx)
 
@@ -46,9 +34,7 @@ class AdDetailView(OwnerDetailView):
 
     def get(self, request, pk) :
         x = Ad.objects.get(id=pk)
-        comments = Comment.objects.filter(ad=x).order_by('-updated_at')
-        comment_form = CommentForm()
-        context = { 'ad' : x, 'comments': comments, 'comment_form': comment_form }
+        context = { 'ad' : x }
         return render(request, self.template_name, context)
 
 
@@ -105,64 +91,8 @@ class AdUpdateView(LoginRequiredMixin, View):
         inst.save_m2m()
         return redirect(self.success_url)
 
-class CommentCreateView(LoginRequiredMixin, View):
-    def post(self, request, pk) :
-        f = get_object_or_404(Ad, id=pk)
-        comment = Comment(text=request.POST['comment'], owner=request.user, ad=f)
-        comment.save()
-        return redirect(reverse('ads:ad_detail', args=[pk]))
-
-class CommentDeleteView(OwnerDeleteView):
-    model = Comment
-    template_name = "ads/ad_comment_delete.html"
-
-    # https://stackoverflow.com/questions/26290415/deleteview-with-a-dynamic-success-url-dependent-on-id
-    def get_success_url(self):
-        ad = self.object.ad
-        return reverse('ads:ad_detail', args=[ad.id])
-
-
-
-
-def stream_file(request, pk):
-    pic = get_object_or_404(Ad, id=pk)
-    response = HttpResponse()
-    response['Content-Type'] = pic.content_type
-    response['Content-Length'] = len(pic.picture)
-    response.write(pic.picture)
-    return response
 
 
 
 
 
-from django.db.utils import IntegrityError
-from django.utils.decorators import method_decorator
-# csrf exemption in class based views
-# https://stackoverflow.com/questions/16458166/how-to-disable-djangos-csrf-validation
-from django.views.decorators.csrf import csrf_exempt
-
-
-@method_decorator(csrf_exempt, name='dispatch')
-class AddFavoriteView(LoginRequiredMixin, View):
-    def post(self, request, pk) :
-        print("Add PK",pk)
-        t = get_object_or_404(Ad, id=pk)
-        fav = Fav(user=request.user, ad=t)
-        try:
-            fav.save()  # In case of duplicate key
-        except IntegrityError as e:
-            pass
-        return HttpResponse()
-
-@method_decorator(csrf_exempt, name='dispatch')
-class DeleteFavoriteView(LoginRequiredMixin, View):
-    def post(self, request, pk) :
-        print("Delete PK",pk)
-        t = get_object_or_404(Ad, id=pk)
-        try:
-            fav = Fav.objects.get(user=request.user, ad=t).delete()
-        except Fav.DoesNotExist as e:
-            pass
-
-        return HttpResponse()
