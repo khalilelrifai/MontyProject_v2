@@ -22,12 +22,12 @@
 
             </a>
             <ul class="dropdown-menu">
-                <li><a href="{% url 'logout' %}?next={% url 'ads:all' %}">Logout</a></li>
+                <li><a href="{% url 'keycloak_logout' %}?next={% url 'ads:all' %}">Logout</a></li>
             </ul>
         </li>
         {% else %}
         <li>
-        <a href="{% url 'login' %}?next={% url 'ads:all' %}">Login</a>
+        <a href="{% url 'keycloak_login' %}?next={% url 'ads:all' %}">Login</a>
         </li>
         {% endif %}
     </ul>

@@ -55,12 +55,4 @@ class OwnerDeleteView(LoginRequiredMixin, DeleteView):
         qs = super(OwnerDeleteView, self).get_queryset()
         return qs.filter(owner=self.request.user)
 
-# References
 
-# https://docs.djangoproject.com/en/3.0/ref/class-based-views/mixins-editing/#django.views.generic.edit.ModelFormMixin.form_valid
-
-# https://stackoverflow.com/questions/862522/django-populate-user-id-when-saving-a-model
-
-# https://stackoverflow.com/a/15540149
-
-# https://stackoverflow.com/questions/5531258/example-of-django-class-based-deleteview

@@ -1,6 +1,8 @@
 
 
 from pathlib import Path
+import os
+
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -15,7 +17,7 @@ SECRET_KEY = 'django-insecure-11&vs5ka9sr+!az7cnge2w22+@afxx@0($7%)8hc)gvw$g7wn)
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = []
+ALLOWED_HOSTS = ['*']
 
 
 # Application definition
@@ -29,8 +31,8 @@ INSTALLED_APPS = [
     'django.contrib.staticfiles',
     'home.apps.HomeConfig',
     'ads.apps.AdsConfig',
-    'authentication.apps.AuthenticationConfig',
     'crispy_forms',
+    'django_keycloak.apps.KeycloakAppConfig',
 ]
 
 CRISPY_TEMPLATE_PACK = 'bootstrap3'
@@ -43,6 +45,9 @@ MIDDLEWARE = [
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
+    'django_keycloak.middleware.BaseKeycloakMiddleware',
+
+
 ]
 
 ROOT_URLCONF = 'MontyProject.urls'
@@ -117,3 +122,29 @@ STATIC_URL = 'static/'
 # https://docs.djangoproject.com/en/4.1/ref/settings/#default-auto-field
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
+
+AUTHENTICATION_BACKENDS = [
+    # Needed to login by username in Django admin, regardless of `allauth`
+    'django.contrib.auth.backends.ModelBackend',
+
+    'django_keycloak.auth.backends.KeycloakAuthorizationCodeBackend',]
+
+KEYCLOAK_OIDC_PROFILE_MODEL = 'django_keycloak.OpenIdConnectProfile'
+
+# KEYCLOAK_SERVER_URL = 'http://localhost:8080/'
+# KEYCLOAK_REALM = 'myrealm'
+# KEYCLOAK_CLIENT_ID = 'myclient'
+# KEYCLOAK_CLIENT_SECRET = 'NX4WP9JqZGg2K0xzGakDGEEyZpr2Kp2H'
+KEYCLOAK_CONFIG = {
+    'KEYCLOAK_REALM': 'myrealm',
+    'KEYCLOAK_CLIENT_ID': 'myclient',
+    'KEYCLOAK_DEFAULT_ACCESS': 'ALLOW', # DENY or ALLOW
+    # 'KEYCLOAK_AUTHORIZATION_CONFIG': os.path.join(CONFIG_DIR , 'authorization-config.json'),
+    'KEYCLOAK_METHOD_VALIDATE_TOKEN': 'DECODE',
+    'KEYCLOAK_SERVER_URL': 'http://localhost:8080/',
+    'KEYCLOAK_CLIENT_SECRET_KEY': 'NX4WP9JqZGg2K0xzGakDGEEyZpr2Kp2H',
+    # 'KEYCLOAK_CLIENT_PUBLIC_KEY': KEYCLOAK_CLIENT_PUBLIC_KEY, 
+}
+
+
+LOGIN_URL = 'keycloak_login'

@@ -4,6 +4,8 @@ from django.shortcuts import get_object_or_404, redirect, render
 from django.urls import reverse, reverse_lazy
 from django.views import View
 
+
+
 from ads.forms import  CreateForm
 from ads.models import Ad
 from ads.owner import (OwnerCreateView, OwnerDeleteView, OwnerDetailView,
@@ -11,21 +13,8 @@ from ads.owner import (OwnerCreateView, OwnerDeleteView, OwnerDetailView,
 
 
 class AdListView(OwnerListView):
-    # model = Ad
-    # By convention:
+    model = Ad
     template_name = "ads/ad_list.html"
-    def get(self, request) :
-        strval =  request.GET.get("search", False)
-        if strval :
-            query = Q(title__icontains=strval)
-            query.add(Q(text__icontains=strval), Q.OR)
-            ad_list = Ad.objects.filter(query).select_related().order_by('-updated_at')[:10]
-        else :
-            ad_list = Ad.objects.all().order_by('-updated_at')[:10]
-
-        ctx = {'ad_list' : ad_list}
-
-        return render(request, self.template_name, ctx)
 
 
 class AdDetailView(OwnerDetailView):
